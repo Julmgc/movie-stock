@@ -1,6 +1,6 @@
-import flask
-from flask import Blueprint, request, jsonify
+from flask import Blueprint
 from app.services.animes_services import Animes
+import psycopg2
 
 bp_animes = Blueprint('deleteanime', __name__, url_prefix='/api')
 
@@ -8,9 +8,9 @@ bp_animes = Blueprint('deleteanime', __name__, url_prefix='/api')
 def filter(anime_id):
     try:
       processed_data = Animes.delete(anime_id)
-      if  not processed_data:
-        return {}, 404
+      if processed_data == None:
+        return {'error': 'Not found'}, 404
       return '', 204
-    except Exception as e:
-      return str(e)
+    except (psycopg2.OperationalError, TypeError):
+      return {'error': 'Not found'}, 404
  

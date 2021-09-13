@@ -1,5 +1,6 @@
 import flask
-from flask import Blueprint, request, jsonify
+from flask import Blueprint
+import psycopg2
 from app.services.animes_services import Animes
 
 bp_animes = Blueprint('getbyid', __name__, url_prefix='/api')
@@ -8,7 +9,11 @@ bp_animes = Blueprint('getbyid', __name__, url_prefix='/api')
 def filter(anime_id):
     try:
       processed_data = Animes.get_specific_anime(anime_id)
-      return processed_data
-    except Exception as e:
-      return str(e)
+      if processed_data == None:
+        return {'error': 'Not found'}, 404
+      return {'data': [processed_data]}, 200
+    except (psycopg2.OperationalError, TypeError):
+      return {'error': 'Not found'}, 404
+
+  
  

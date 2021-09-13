@@ -1,5 +1,5 @@
-import flask
-from flask import Blueprint, request, jsonify
+import psycopg2
+from flask import Blueprint, request
 from app.services.animes_services import Animes
 
 bp_animes = Blueprint('patchAnimes', __name__, url_prefix='/api')
@@ -10,10 +10,9 @@ def update(anime_id: int):
     data = request.json
     processed_data = Animes.update_anime(anime_id, **data)
     return processed_data
-  except Exception as e:
-    return str(e), 404
-      # se a table estiver vazia return an empy dicty with a list inside, 200
-    # otherwise return the dict list, 200
+  except psycopg2.DatabaseError:
+     return {'error': 'Not found'}, 404
+
 
 
 

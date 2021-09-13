@@ -1,4 +1,5 @@
 import flask
+import psycopg2
 from flask import Blueprint, request, jsonify
 from app.services.animes_services import Animes
 
@@ -10,13 +11,15 @@ def get_create():
     try:
       data = request.json
       processed_data = Animes.post_anime(**data)
+      if 'available_keys' in processed_data.keys():
+        return processed_data, 422
       return jsonify(processed_data)
-    except Exception as e:
-      return str(e)
+    except  psycopg2.errors.UniqueViolation:
+       return jsonify({'error': 'anime already exists'}), 422
   else:
     try:
       processed_data = Animes.get_all_animes()
-      return jsonify(processed_data)
-    except:
-      return {[]}, 200
+      return jsonify({"data": processed_data})
+    except psycopg2.OperationalError: 
+      return jsonify({"data": []}), 200
 

@@ -2,7 +2,7 @@ from flask import Blueprint
 from app.services.animes_services import Animes
 import psycopg2
 
-bp_animes = Blueprint('deleteanime', __name__, url_prefix='/api')
+bp_animes = Blueprint('deleteAnime', __name__, url_prefix='/api')
 
 @bp_animes.route('/animes/<int:anime_id>', methods=['DELETE'])
 def filter(anime_id):

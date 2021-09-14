@@ -18,9 +18,6 @@ class Animes():
   def __init__(self, data: tuple):
       self.id, self.anime, self.released_date, self.seasons = data
 
-  def save(self):
-    return self.__dict__
-
   @staticmethod
   def checking_keys(**kwargs):
     available_keys = ["anime", "seasons", "released_date"]
@@ -86,7 +83,6 @@ class Animes():
     try:     
       Animes.create_table()
       return Animes.insert_data_into_table(**kwargs)
-
     except psycopg2.OperationalError:
       Animes.create_db()
       Animes.create_table()
@@ -119,21 +115,17 @@ class Animes():
 
   @staticmethod
   def delete(anime_id):
-        
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
-
     cur.execute(""" DELETE FROM
                         animes
                     WHERE
                         id=(%s)
                     RETURNING *;""", (anime_id, ))
-
     getting_data = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-
     return getting_data
 
   @staticmethod
@@ -147,8 +139,7 @@ class Animes():
       cur = conn.cursor()
       columns = [sql.Identifier(key) for key in kwargs.keys()]
       values = [sql.Literal(value) for value in data_values]
-      query = sql.SQL(
-          """
+      query = sql.SQL("""
               UPDATE
                   animes
               SET
@@ -159,16 +150,15 @@ class Animes():
           """).format(id=sql.Literal(str(id)),
                       columns=sql.SQL(',').join(columns),
                       values=sql.SQL(',').join(values))
-      
       cur.execute(query)
-      fetch_result = cur.fetchone()
+      updated_anime = cur.fetchone()
       conn.commit()
       cur.close()
       conn.close()
 
-      if not fetch_result:
+      if not updated_anime:
           return {"error": "Not found"}, 404
-      serialized_data = Animes(fetch_result).__dict__
+      serialized_data = Animes(updated_anime).__dict__
       return serialized_data
     else:
       return check_keys, 422

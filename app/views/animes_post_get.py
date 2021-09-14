@@ -13,9 +13,11 @@ def get_create():
       processed_data = Animes.post_anime(**data)
       if 'available_keys' in processed_data.keys():
         return processed_data, 422
-      return jsonify(processed_data)
+      return processed_data
     except  psycopg2.errors.UniqueViolation:
        return jsonify({'error': 'anime already exists'}), 422
+    except IndexError:
+      return jsonify({'error': 'Please send anime, seasons and released_date data'})
   else:
     try:
       processed_data = Animes.get_all_animes()

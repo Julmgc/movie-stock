@@ -71,9 +71,11 @@ class Animes():
       cur.execute("INSERT INTO animes(anime, released_date, seasons) VALUES (%s, %s, %s) RETURNING * ; ", (data_values) )
       result = cur.fetchone()
       data_processed = Animes(result).__dict__
+      data_processed['released_date'] = str(data_processed['released_date'])
       conn.commit()
       cur.close()
-      conn.close()      
+      conn.close()
+           
       return data_processed
     else:
       return check_keys

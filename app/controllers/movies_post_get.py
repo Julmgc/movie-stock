@@ -1,26 +1,26 @@
 import flask
 import psycopg2
 from flask import Blueprint, request, jsonify
-from app.services.animes_services import Animes
+from app.models.movies_models import Movies
 
-bp_animes = Blueprint('animes', __name__, url_prefix='/api')
+bp_movies = Blueprint('movies', __name__, url_prefix='/api')
 
-@bp_animes.route('/animes', methods=['POST', 'GET'])
+@bp_movies.route('/movies', methods=['POST', 'GET'])
 def get_create():
   if flask.request.method == 'POST':
     try:
       data = request.json
-      processed_data = Animes.post_anime(**data)
+      processed_data = Movies.post_movie(**data)
       if 'available_keys' in processed_data.keys():
         return processed_data, 422
       return processed_data
     except  psycopg2.errors.UniqueViolation:
-       return jsonify({'error': 'anime already exists'}), 422
+       return jsonify({'error': 'movie already exists'}), 422
     except IndexError:
-      return jsonify({'error': 'Please send anime, seasons and released_date data'})
+      return jsonify({'error': 'Please send movie, seasons and released_date data'})
   else:
     try:
-      processed_data = Animes.get_all_animes()
+      processed_data = Movies.get_all_movies()
       return jsonify({"data": processed_data})
     except psycopg2.OperationalError: 
       return jsonify({"data": []}), 200

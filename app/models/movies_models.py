@@ -14,13 +14,13 @@ configs = {
     'password': os.environ.get('DB_PWD') 
 }
 
-class Animes():
+class Movies():
   def __init__(self, data: tuple):
-      self.id, self.anime, self.released_date, self.seasons = data
+      self.id, self.movie, self.released_date, self.seasons = data
 
   @staticmethod
   def checking_keys(**kwargs):
-    available_keys = ["anime", "seasons", "released_date"]
+    available_keys = ["movie", "seasons", "released_date"]
     wrong_keys = []
     keys_kwargs = [i for i in kwargs.keys()]
     checking = [wrong_keys.append(i) for i in keys_kwargs if i not in available_keys]
@@ -49,9 +49,9 @@ class Animes():
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
     cur.execute("""
-      CREATE TABLE IF NOT EXISTS animes (
+      CREATE TABLE IF NOT EXISTS movies (
         id BIGSERIAL PRIMARY KEY,
-        anime VARCHAR(100) NOT NULL UNIQUE,
+        movie VARCHAR(100) NOT NULL UNIQUE,
         released_date DATE NOT NULL,
         seasons INTEGER NOT NULL
       )
@@ -62,15 +62,15 @@ class Animes():
 
   @staticmethod
   def insert_data_into_table(**kwargs):
-    check_keys = Animes.checking_keys(**kwargs)
+    check_keys = Movies.checking_keys(**kwargs)
     if len(check_keys) == 0:
       conn = psycopg2.connect(**configs)
       cur = conn.cursor()
-      data = {str(k):str(v).title() if k=='anime' else v for k,v in kwargs.items()}
+      data = {str(k):str(v).title() if k=='movie' else v for k,v in kwargs.items()}
       data_values = tuple(data.values())
-      cur.execute("INSERT INTO animes(anime, released_date, seasons) VALUES (%s, %s, %s) RETURNING * ; ", (data_values) )
+      cur.execute("INSERT INTO movies(movie, released_date, seasons) VALUES (%s, %s, %s) RETURNING * ; ", (data_values) )
       result = cur.fetchone()
-      data_processed = Animes(result).__dict__
+      data_processed = Movies(result).__dict__
       data_processed['released_date'] = str(data_processed['released_date'])
       conn.commit()
       cur.close()
@@ -81,61 +81,63 @@ class Animes():
       return check_keys
 
   @staticmethod
-  def post_anime(**kwargs):
+  def post_movie(**kwargs):
     try:     
-      Animes.create_table()
-      return Animes.insert_data_into_table(**kwargs)
+      Movies.create_table()
+      return Movies.insert_data_into_table(**kwargs)
     except psycopg2.OperationalError:
-      Animes.create_db()
-      Animes.create_table()
-      return Animes.insert_data_into_table(**kwargs)
+      Movies.create_db()
+      Movies.create_table()
+      return Movies.insert_data_into_table(**kwargs)
       
   @staticmethod
-  def get_all_animes():
+  def get_all_movies():
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
     cur.execute("""
-      SELECT * FROM animes
+      SELECT * FROM movies
     """)
     getting_data = cur.fetchall()
     conn.commit()
     cur.close()
     conn.close()
-    processed_data = [Animes(fetched_animes).__dict__ for fetched_animes in getting_data]    
+    processed_data = [Movies(fetched_movies).__dict__ for fetched_movies in getting_data]    
     return processed_data
 
   @staticmethod
-  def get_specific_anime(anime_id):   
+  def get_specific_movie(movie_id):   
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
-    cur.execute('SELECT * FROM animes WHERE id=(%s);', (anime_id, ))
+    cur.execute('SELECT * FROM movies WHERE id=(%s);', (movie_id, ))
     fetched_result = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-    return Animes(fetched_result).__dict__
+    return Movies(fetched_result).__dict__
 
   @staticmethod
-  def delete(anime_id):
+  def delete(movie_id):
     conn = psycopg2.connect(**configs)
     cur = conn.cursor()
     cur.execute(""" DELETE FROM
-                        animes
+                        movies
                     WHERE
                         id=(%s)
-                    RETURNING *;""", (anime_id, ))
+                    RETURNING *;""", (movie_id, ))
     getting_data = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-    return getting_data
+    serialized_data = Movies(getting_data).__dict__
+    serialized_data['released_date'] = str(serialized_data['released_date'])
+    return serialized_data
 
   @staticmethod
-  def update_anime(id, **kwargs):
-    check_keys = Animes.checking_keys(**kwargs)
+  def update_movie(id, **kwargs):
+    check_keys = Movies.checking_keys(**kwargs)
     if len(check_keys) == 0:  
-      if 'anime' in kwargs.keys():
-        data = {str(k):str(v).title() if k=='anime' else v for k,v in kwargs.items()}
+      if 'movie' in kwargs.keys():
+        data = {str(k):str(v).title() if k=='movie' else v for k,v in kwargs.items()}
         data_values = tuple(data.values())
       conn = psycopg2.connect(**configs)
       cur = conn.cursor()
@@ -143,7 +145,7 @@ class Animes():
       values = [sql.Literal(value) for value in data_values]
       query = sql.SQL("""
               UPDATE
-                  animes
+                  movies
               SET
                   ({columns}) = row({values})
               WHERE
@@ -153,14 +155,15 @@ class Animes():
                       columns=sql.SQL(',').join(columns),
                       values=sql.SQL(',').join(values))
       cur.execute(query)
-      updated_anime = cur.fetchone()
+      updated_movie = cur.fetchone()
       conn.commit()
       cur.close()
       conn.close()
 
-      if not updated_anime:
+      if not updated_movie:
           return {"error": "Not found"}, 404
-      serialized_data = Animes(updated_anime).__dict__
+      serialized_data = Movies(updated_movie).__dict__
+      serialized_data['released_date'] = str(serialized_data['released_date'])
       return serialized_data
     else:
       return check_keys, 422

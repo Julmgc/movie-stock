@@ -1,6 +1,6 @@
 ## <font size="7">**Movie-stock**</font>
 
-​### <font color="gree"> CRUD app for movies, using MongoDB </font> Saves a movie
+​### <font color="gree"> CRUD API for movies, using MongoDB </font> Saves a movie
 
 ## <font size="6">Base URL /api </font>
 
